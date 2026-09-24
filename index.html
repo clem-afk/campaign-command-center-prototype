@@ -63,6 +63,33 @@
       .metric-sub strong { color: var(--mint-ink); }
 
       .portfolio-layout { display: grid; grid-template-columns: minmax(720px, 1fr) 270px; gap: 16px; align-items: start; }
+      #portfolio .portfolio-layout { display: none; }
+      .annual-planner { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; align-items: start; }
+      .month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 14px; }
+      .month-card { cursor: pointer; min-height: 159px; text-align: left; border: 1px solid var(--line); background: #fff; border-radius: 12px; padding: 14px; color: var(--ink); transition: 160ms ease; }
+      .month-card:hover { border-color: #bbc6f5; transform: translateY(-1px); box-shadow: 0 8px 18px rgba(38, 54, 109, .08); }
+      .month-card.active { border-color: var(--blue); background: #f7f8ff; box-shadow: inset 0 0 0 1px var(--blue); }
+      .month-card.future { background: #fbfbfc; }
+      .month-name { display: block; font-weight: 800; font-size: 14px; letter-spacing: -.02em; }
+      .month-period { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+      .month-total { display: block; margin-top: 18px; font-size: 19px; font-weight: 800; letter-spacing: -.045em; }
+      .month-caption { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
+      .month-campaigns { display: flex; align-items: center; gap: 4px; margin-top: 13px; }
+      .month-campaigns i { display: block; width: 7px; height: 7px; border-radius: 50%; }
+      .month-campaigns span { color: var(--muted); font-size: 11px; margin-left: 3px; }
+      .month-detail { padding: 20px; min-height: 365px; }
+      .detail-overline { color: var(--blue); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; }
+      .detail-month { margin: 5px 0 18px; font-size: 25px; letter-spacing: -.045em; }
+      .detail-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+      .detail-metric { padding: 11px; border-radius: 9px; background: #f8f8fa; }
+      .detail-metric span { display: block; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .055em; }
+      .detail-metric strong { display: block; margin-top: 5px; font-size: 18px; letter-spacing: -.04em; }
+      .detail-campaign-list { margin-top: 18px; border-top: 1px solid var(--line); }
+      .detail-campaign { display: flex; justify-content: space-between; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+      .detail-campaign strong { display: block; font-size: 12px; }
+      .detail-campaign span { display: block; color: var(--muted); margin-top: 3px; font-size: 11px; }
+      .detail-campaign b { white-space: nowrap; font-size: 12px; }
+      .detail-focus { margin: 16px 0 0; padding: 11px; border-radius: 8px; background: var(--lavender); color: #435ca9; font-size: 12px; line-height: 1.35; }
       .timeline { overflow: hidden; }
       .timeline-header, .campaign-row { display: grid; grid-template-columns: 205px 1fr; }
       .timeline-header { border-bottom: 1px solid var(--line); }
@@ -153,7 +180,8 @@
       .proposal-note { margin-top: 18px; color: var(--muted); font-size: 12px; }
       @media (max-width: 1000px) {
         .shell { padding: 25px 18px 42px; }
-        .idea-switcher, .metric-grid, .portfolio-layout, .capacity-grid, .finance-layout { grid-template-columns: 1fr; }
+        .idea-switcher, .metric-grid, .portfolio-layout, .annual-planner, .capacity-grid, .finance-layout { grid-template-columns: 1fr; }
+        .month-grid { grid-template-columns: repeat(3, 1fr); }
         .timeline { overflow-x: auto; }
         .timeline-inner { min-width: 750px; }
       }
@@ -163,6 +191,7 @@
         .idea { padding: 11px; }
         .idea-purpose { display: none; }
         .metric-grid { grid-template-columns: repeat(2, 1fr); }
+        .month-grid { grid-template-columns: repeat(2, 1fr); }
         .load-scale, .team-load { grid-template-columns: 116px repeat(5, 1fr); }
         .team-name { font-size: 12px; }
       }
@@ -181,8 +210,8 @@
       <nav class="idea-switcher" aria-label="Dashboard concepts">
         <button class="idea active" data-view="portfolio" type="button">
           <span class="idea-number">01 · Recommended</span>
-          <span class="idea-name">Portfolio horizon</span>
-          <span class="idea-purpose">One view for campaign overlap and decision points.</span>
+          <span class="idea-name">Annual horizon</span>
+          <span class="idea-purpose">One year of campaign activity, month by month.</span>
         </button>
         <button class="idea" data-view="capacity" type="button">
           <span class="idea-number">02 · Operations</span>
@@ -204,7 +233,11 @@
       </section>
 
       <section id="portfolio" class="view active">
-        <div class="section-heading"><h2>Portfolio horizon</h2><p class="section-note">Four months · production and creator publication windows</p></div>
+        <div class="section-heading"><h2>Annual horizon</h2><p class="section-note">April 2026 → March 2027 · select a month for the full picture</p></div>
+        <div class="annual-planner">
+          <article class="card"><div id="monthGrid" class="month-grid" aria-label="Annual campaign plan"></div></article>
+          <aside id="monthDetail" class="card month-detail" aria-live="polite"></aside>
+        </div>
         <div class="portfolio-layout">
           <article class="card timeline">
             <div class="timeline-inner">
@@ -223,7 +256,7 @@
             <div class="insight"><span class="pill good">Budget room</span><strong>€19k remains uncommitted</strong><p>Available to reinforce Q4 distribution or new business.</p></div>
           </aside>
         </div>
-        <p class="proposal-note">Best as the agency home screen: it answers “what is happening, when, and where will the next collision be?” in one scan.</p>
+        <p class="proposal-note">Start with the annual plan, then open any month to see its campaigns, delivery load, client revenue, budget and gross margin.</p>
       </section>
 
       <section id="capacity" class="view">
@@ -301,6 +334,46 @@
         buttons.forEach((item) => item.classList.toggle('active', item === button));
         views.forEach((view) => view.classList.toggle('active', view.id === button.dataset.view));
       }));
+
+      const annualPlan = [
+        { month: 'April', year: '2026', budget: 14, revenue: 22, margin: 8, fte: '0.6 FTE', focus: 'Set the annual rhythm and secure May creator availability.', campaigns: [['Spring Edit', 10, '#6c83e8'], ['Always On', 4, '#e39748']] },
+        { month: 'May', year: '2026', budget: 19, revenue: 31, margin: 12, fte: '0.9 FTE', focus: 'Creator onboarding is the main delivery pressure.', campaigns: [['Spring Edit', 13, '#6c83e8'], ['Always On', 6, '#e39748']] },
+        { month: 'June', year: '2026', budget: 24, revenue: 38, margin: 14, fte: '1.1 FTE', focus: 'Lock summer production before team availability tightens.', campaigns: [['Summer Drop', 18, '#28a878'], ['Always On', 6, '#e39748']] },
+        { month: 'July', year: '2026', budget: 17, revenue: 27, margin: 10, fte: '0.7 FTE', focus: 'Keep delivery lean while preparing the September launch.', campaigns: [['Summer Drop', 11, '#28a878'], ['Always On', 6, '#e39748']] },
+        { month: 'August', year: '2026', budget: 12, revenue: 20, margin: 8, fte: '0.5 FTE', focus: 'Recruit New Season creators before the September start.', campaigns: [['New Season', 8, '#6c83e8'], ['Always On', 4, '#e39748']] },
+        { month: 'September', year: '2026', budget: 19, revenue: 33, margin: 14, fte: '1.0 FTE', focus: 'New Season publishing overlaps with Launch Wave onboarding.', campaigns: [['New Season', 10, '#6c83e8'], ['Launch Wave', 7, '#28a878'], ['Always On', 2, '#e39748']] },
+        { month: 'October', year: '2026', budget: 38, revenue: 56, margin: 18, fte: '2.2 FTE', focus: 'Highest pressure month — secure Creative Ops support before W41.', campaigns: [['Launch Wave', 25, '#28a878'], ['New Season', 7, '#6c83e8'], ['Always On', 6, '#e39748']] },
+        { month: 'November', year: '2026', budget: 42, revenue: 63, margin: 21, fte: '2.1 FTE', focus: 'Holiday Edit production and Brand Refresh require a shared delivery plan.', campaigns: [['Holiday Edit', 24, '#d15f78'], ['Brand Refresh', 12, '#9f74cf'], ['Always On', 6, '#e39748']] },
+        { month: 'December', year: '2026', budget: 31, revenue: 49, margin: 18, fte: '1.4 FTE', focus: 'Finish holiday delivery and protect reporting time for the team.', campaigns: [['Holiday Edit', 19, '#d15f78'], ['Brand Refresh', 8, '#9f74cf'], ['Always On', 4, '#e39748']] },
+        { month: 'January', year: '2027', budget: 16, revenue: 27, margin: 11, fte: '0.7 FTE', focus: 'Reset the pipeline and begin Q1 recruitment early.', campaigns: [['Always On', 7, '#e39748'], ['Q1 Launch', 9, '#6c83e8']] },
+        { month: 'February', year: '2027', budget: 23, revenue: 36, margin: 13, fte: '1.0 FTE', focus: 'Balance Q1 production with planning for the next spring cycle.', campaigns: [['Q1 Launch', 17, '#6c83e8'], ['Always On', 6, '#e39748']] },
+        { month: 'March', year: '2027', budget: 27, revenue: 41, margin: 14, fte: '1.2 FTE', focus: 'Close the financial year and confirm the April campaign slate.', campaigns: [['Q1 Launch', 18, '#6c83e8'], ['Always On', 5, '#e39748'], ['Spring Edit', 4, '#28a878']] },
+      ];
+      const monthGrid = document.querySelector('#monthGrid');
+      const monthDetail = document.querySelector('#monthDetail');
+      function euroK(value) { return `€${value}k`; }
+      function renderMonth(index) {
+        const item = annualPlan[index];
+        monthGrid.innerHTML = annualPlan.map((month, monthIndex) => `
+          <button class="month-card ${monthIndex === index ? 'active' : ''} ${monthIndex > 8 ? 'future' : ''}" type="button" data-month-index="${monthIndex}">
+            <span class="month-name">${month.month}</span><span class="month-period">${month.year}</span>
+            <strong class="month-total">${euroK(month.revenue)}</strong><span class="month-caption">client revenue</span>
+            <span class="month-campaigns">${month.campaigns.map((campaign) => `<i style="background:${campaign[2]}"></i>`).join('')}<span>${month.campaigns.length} campaigns</span></span>
+          </button>`).join('');
+        monthDetail.innerHTML = `
+          <span class="detail-overline">${item.campaigns.length} campaigns · ${item.fte} internal load</span>
+          <h3 class="detail-month">${item.month} ${item.year}</h3>
+          <div class="detail-metrics">
+            <div class="detail-metric"><span>Client revenue</span><strong>${euroK(item.revenue)}</strong></div>
+            <div class="detail-metric"><span>Campaign budget</span><strong>${euroK(item.budget)}</strong></div>
+            <div class="detail-metric"><span>Gross margin</span><strong>${euroK(item.margin)}</strong></div>
+            <div class="detail-metric"><span>Internal load</span><strong>${item.fte}</strong></div>
+          </div>
+          <div class="detail-campaign-list">${item.campaigns.map((campaign) => `<div class="detail-campaign"><div><strong><i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${campaign[2]};margin-right:6px"></i>${campaign[0]}</strong><span>${campaign[1]} creators active</span></div><b>${euroK(Math.round(item.budget * campaign[1] / item.campaigns.reduce((total, row) => total + row[1], 0)))}</b></div>`).join('')}</div>
+          <p class="detail-focus">${item.focus}</p>`;
+        monthGrid.querySelectorAll('[data-month-index]').forEach((card) => card.addEventListener('click', () => renderMonth(Number(card.dataset.monthIndex))));
+      }
+      renderMonth(5);
     </script>
   </body>
 </html>
