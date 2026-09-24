@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campaign Command Center — Direction concepts</title>
+    <style>
+      :root {
+        --ink: #172035;
+        --muted: #6e778a;
+        --line: #e9eaf0;
+        --canvas: #f6f6f4;
+        --panel: #ffffff;
+        --navy: #25366d;
+        --blue: #5779e7;
+        --lavender: #e4e8ff;
+        --mint: #d9f2e6;
+        --mint-ink: #18865e;
+        --peach: #fff0df;
+        --peach-ink: #b75e10;
+        --rose: #ffe3e4;
+        --rose-ink: #b7414a;
+        --shadow: 0 12px 38px rgba(34, 43, 73, 0.07);
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 14px;
+        letter-spacing: -0.01em;
+      }
+      button { font: inherit; }
+      .shell { max-width: 1440px; margin: 0 auto; padding: 34px 42px 56px; }
+      .topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 28px; }
+      .eyebrow { margin: 0 0 7px; color: var(--blue); font-weight: 750; font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; }
+      h1 { margin: 0; font-size: clamp(28px, 3vw, 38px); letter-spacing: -0.05em; line-height: 1; }
+      .updated { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); white-space: nowrap; padding-top: 5px; }
+      .dot { width: 7px; height: 7px; border-radius: 50%; background: #35bc82; box-shadow: 0 0 0 4px #d9f6e9; }
+
+      .idea-switcher { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 6px; border: 1px solid var(--line); background: #fff; border-radius: 15px; margin-bottom: 22px; box-shadow: 0 5px 20px rgba(34, 43, 73, 0.04); }
+      .idea { cursor: pointer; border: 0; border-radius: 10px; text-align: left; padding: 13px 16px; background: transparent; color: var(--muted); transition: 160ms ease; }
+      .idea:hover { background: #f6f7fb; color: var(--ink); }
+      .idea.active { color: var(--ink); background: var(--lavender); }
+      .idea-number { display: block; color: var(--blue); font-size: 11px; font-weight: 800; letter-spacing: .08em; margin-bottom: 4px; }
+      .idea-name { font-size: 14px; font-weight: 750; }
+      .idea-purpose { display: block; font-size: 12px; margin-top: 2px; line-height: 1.35; }
+
+      .view { display: none; animation: enter .22s ease; }
+      .view.active { display: block; }
+      @keyframes enter { from { opacity: .3; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+      .section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin: 28px 0 14px; }
+      h2 { font-size: 17px; margin: 0; letter-spacing: -.03em; }
+      .section-note { color: var(--muted); margin: 0; font-size: 13px; }
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+      .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+      .metric { padding: 17px 18px 16px; min-height: 110px; }
+      .metric-label { color: var(--muted); font-size: 12px; }
+      .metric-value { display: block; font-size: 28px; font-weight: 780; letter-spacing: -.05em; margin: 8px 0 4px; }
+      .metric-sub { color: var(--muted); font-size: 12px; }
+      .metric-sub strong { color: var(--mint-ink); }
+
+      .portfolio-layout { display: grid; grid-template-columns: minmax(720px, 1fr) 270px; gap: 16px; align-items: start; }
+      .timeline { overflow: hidden; }
+      .timeline-header, .campaign-row { display: grid; grid-template-columns: 205px 1fr; }
+      .timeline-header { border-bottom: 1px solid var(--line); }
+      .campaign-label-spacer { padding: 14px 16px; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+      .months { display: grid; grid-template-columns: repeat(4, 1fr); }
+      .months span { padding: 14px 10px; color: var(--muted); border-left: 1px solid var(--line); font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: .08em; }
+      .campaign-row { min-height: 77px; border-bottom: 1px solid var(--line); }
+      .campaign-row:last-child { border-bottom: 0; }
+      .campaign-meta { padding: 15px 16px; display: flex; gap: 9px; align-items: flex-start; }
+      .campaign-swatch { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; flex: 0 0 auto; }
+      .campaign-name { font-weight: 780; font-size: 13px; }
+      .campaign-client { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+      .campaign-track { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); background-image: linear-gradient(to right, transparent calc(25% - 1px), var(--line) calc(25% - 1px), var(--line) 25%, transparent 25%); }
+      .window { position: absolute; border-radius: 7px; height: 22px; display: flex; align-items: center; padding: 0 8px; overflow: hidden; white-space: nowrap; font-size: 10px; font-weight: 750; letter-spacing: .01em; }
+      .window.production { top: 11px; background: var(--lavender); color: #425cac; }
+      .window.publication { top: 42px; background: var(--mint); color: #197353; }
+      .today { position: absolute; left: 27%; top: 0; bottom: 0; width: 1.5px; background: var(--rose-ink); z-index: 5; }
+      .today span { position: absolute; top: 5px; left: 5px; color: var(--rose-ink); font-size: 10px; font-weight: 800; }
+      .legend { display: flex; gap: 14px; align-items: center; padding: 13px 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+      .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; }
+      .insight-list { padding: 3px 0; }
+      .insight { padding: 15px 16px; border-bottom: 1px solid var(--line); }
+      .insight:last-child { border: 0; }
+      .insight-kicker { color: var(--muted); font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: .07em; }
+      .insight strong { display: block; font-size: 14px; margin: 6px 0 4px; line-height: 1.24; }
+      .insight p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.38; }
+      .pill { display: inline-flex; align-items: center; border-radius: 99px; padding: 3px 7px; font-size: 10px; font-weight: 800; }
+      .pill.warn { background: var(--peach); color: var(--peach-ink); }
+      .pill.good { background: var(--mint); color: var(--mint-ink); }
+      .pill.alert { background: var(--rose); color: var(--rose-ink); }
+
+      .capacity-grid { display: grid; grid-template-columns: 1.35fr .85fr; gap: 16px; }
+      .load-card { padding: 18px; }
+      .load-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 19px; }
+      .load-title { font-weight: 780; }
+      .load-scale { display: grid; grid-template-columns: 150px repeat(5, 1fr); border-bottom: 1px solid var(--line); margin: 0 -18px; padding: 0 18px 9px; color: var(--muted); font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: .06em; }
+      .team-load { display: grid; grid-template-columns: 150px repeat(5, 1fr); align-items: center; min-height: 65px; border-bottom: 1px solid var(--line); }
+      .team-load:last-child { border: 0; }
+      .team-name { font-weight: 740; }
+      .team-detail { display: block; font-size: 11px; color: var(--muted); margin-top: 3px; }
+      .heat { height: 28px; margin: 0 4px; border-radius: 6px; display: grid; place-items: center; font-size: 11px; font-weight: 800; }
+      .heat.low { background: #eef4f1; color: #56816c; }
+      .heat.mid { background: var(--lavender); color: #546ebd; }
+      .heat.high { background: var(--peach); color: var(--peach-ink); }
+      .heat.over { background: var(--rose); color: var(--rose-ink); }
+      .hire-card { padding: 20px; background: var(--navy); color: #fff; border-color: var(--navy); }
+      .hire-card .eyebrow { color: #aebdff; }
+      .hire-card h2 { font-size: 20px; line-height: 1.15; max-width: 230px; }
+      .hire-card p { margin: 10px 0 20px; color: #cbd3f9; line-height: 1.45; font-size: 13px; }
+      .hire-role { border-top: 1px solid rgba(255,255,255,.16); padding: 12px 0; display: flex; align-items: center; justify-content: space-between; gap: 9px; }
+      .hire-role:last-child { padding-bottom: 0; }
+      .hire-role strong { font-size: 13px; }
+      .hire-role span { color: #aebdff; font-size: 11px; text-align: right; }
+      .campaign-demand { margin-top: 16px; padding: 18px; }
+      .demand-row { display: grid; grid-template-columns: 1.2fr .8fr .6fr; gap: 10px; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+      .demand-row:last-child { border: 0; }
+      .demand-row strong { font-size: 13px; }
+      .demand-row span { color: var(--muted); }
+
+      .finance-layout { display: grid; grid-template-columns: .95fr 1.05fr; gap: 16px; }
+      .budget-card { padding: 20px; }
+      .budget-total { display: flex; justify-content: space-between; align-items: baseline; margin: 13px 0 18px; }
+      .budget-total strong { font-size: 34px; letter-spacing: -.055em; }
+      .budget-total span { color: var(--muted); font-size: 12px; }
+      .budget-bar { display: flex; height: 13px; background: #eef0f5; overflow: hidden; border-radius: 99px; }
+      .budget-bar i { display: block; height: 100%; }
+      .budget-key { display: flex; justify-content: space-between; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+      .budget-key:last-child { border: 0; }
+      .budget-key div { display: flex; gap: 8px; align-items: center; }
+      .budget-key i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
+      .budget-key strong { font-size: 13px; }
+      .monthly { padding: 20px; }
+      .monthly-heading { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; }
+      .monthly-heading span { color: var(--muted); font-size: 12px; }
+      .month-bars { height: 200px; display: flex; align-items: end; gap: 20px; padding: 0 8px; border-bottom: 1px solid var(--line); }
+      .month-column { flex: 1; height: 100%; display: flex; align-items: end; justify-content: center; position: relative; }
+      .month-stack { width: min(100%, 54px); display: flex; flex-direction: column-reverse; border-radius: 7px 7px 0 0; overflow: hidden; }
+      .month-column em { position: absolute; bottom: calc(var(--h) + 7px); font-size: 11px; font-style: normal; color: var(--muted); }
+      .month-labels { display: flex; justify-content: space-around; padding: 10px 0 0; color: var(--muted); font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: .06em; }
+      .campaign-table { margin-top: 16px; overflow: hidden; }
+      table { width: 100%; border-collapse: collapse; }
+      th { text-align: left; color: var(--muted); background: #fafafb; padding: 10px 14px; font-size: 10px; text-transform: uppercase; letter-spacing: .07em; }
+      td { padding: 12px 14px; border-top: 1px solid var(--line); font-size: 12px; }
+      td:first-child { font-weight: 750; }
+      td.num { font-variant-numeric: tabular-nums; text-align: right; }
+      .amount { font-weight: 750; }
+
+      .proposal-note { margin-top: 18px; color: var(--muted); font-size: 12px; }
+      @media (max-width: 1000px) {
+        .shell { padding: 25px 18px 42px; }
+        .idea-switcher, .metric-grid, .portfolio-layout, .capacity-grid, .finance-layout { grid-template-columns: 1fr; }
+        .timeline { overflow-x: auto; }
+        .timeline-inner { min-width: 750px; }
+      }
+      @media (max-width: 650px) {
+        .topbar { display: block; }
+        .updated { margin-top: 14px; }
+        .idea { padding: 11px; }
+        .idea-purpose { display: none; }
+        .metric-grid { grid-template-columns: repeat(2, 1fr); }
+        .load-scale, .team-load { grid-template-columns: 116px repeat(5, 1fr); }
+        .team-name { font-size: 12px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Agency planning · concept prototype</p>
+          <h1>Campaign Command Center</h1>
+        </div>
+        <div class="updated"><span class="dot"></span> Planning snapshot · Sep 2026</div>
+      </header>
+
+      <nav class="idea-switcher" aria-label="Dashboard concepts">
+        <button class="idea active" data-view="portfolio" type="button">
+          <span class="idea-number">01 · Recommended</span>
+          <span class="idea-name">Portfolio horizon</span>
+          <span class="idea-purpose">One view for campaign overlap and decision points.</span>
+        </button>
+        <button class="idea" data-view="capacity" type="button">
+          <span class="idea-number">02 · Operations</span>
+          <span class="idea-name">Capacity & hiring</span>
+          <span class="idea-purpose">A weekly team-load view for staffing decisions.</span>
+        </button>
+        <button class="idea" data-view="finance" type="button">
+          <span class="idea-number">03 · Finance</span>
+          <span class="idea-name">Budget commitments</span>
+          <span class="idea-purpose">Budget pressure by campaign and by month.</span>
+        </button>
+      </nav>
+
+      <section class="metric-grid" aria-label="Portfolio snapshot">
+        <article class="card metric"><span class="metric-label">Campaigns in motion</span><strong class="metric-value">6</strong><span class="metric-sub"><strong>3 live</strong> · 3 planned</span></article>
+        <article class="card metric"><span class="metric-label">Committed budget</span><strong class="metric-value">€142k</strong><span class="metric-sub">€91k through December</span></article>
+        <article class="card metric"><span class="metric-label">Creator publishing</span><strong class="metric-value">114</strong><span class="metric-sub">across the next 90 days</span></article>
+        <article class="card metric"><span class="metric-label">Capacity pressure</span><strong class="metric-value">Oct</strong><span class="metric-sub">Creative Ops at <strong>108%</strong></span></article>
+      </section>
+
+      <section id="portfolio" class="view active">
+        <div class="section-heading"><h2>Portfolio horizon</h2><p class="section-note">Four months · production and creator publication windows</p></div>
+        <div class="portfolio-layout">
+          <article class="card timeline">
+            <div class="timeline-inner">
+              <div class="timeline-header"><div class="campaign-label-spacer">Campaign</div><div class="months"><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span></div></div>
+              <div class="campaign-row"><div class="campaign-meta"><i class="campaign-swatch" style="background:#6c83e8"></i><div><span class="campaign-name">New Season</span><span class="campaign-client">Nori · 18 creators · €28k</span></div></div><div class="campaign-track"><div class="today"><span>Today</span></div><div class="window production" style="left:3%; width:33%">Creator production · 24 days</div><div class="window publication" style="left:20%; width:49%">Publishing & distribution · 45 days</div></div></div>
+              <div class="campaign-row"><div class="campaign-meta"><i class="campaign-swatch" style="background:#28a878"></i><div><span class="campaign-name">Launch Wave</span><span class="campaign-client">Tano · 30 creators · €42k</span></div></div><div class="campaign-track"><div class="window production" style="left:18%; width:37%">Creator production · 28 days</div><div class="window publication" style="left:36%; width:52%">Publishing & distribution · 50 days</div></div></div>
+              <div class="campaign-row"><div class="campaign-meta"><i class="campaign-swatch" style="background:#e39748"></i><div><span class="campaign-name">Always On</span><span class="campaign-client">Sundae · 12 creators · €16k</span></div></div><div class="campaign-track"><div class="window production" style="left:0%; width:100%">Rolling creator production · monthly</div><div class="window publication" style="left:0%; width:100%">Continuous publishing · 4 months</div></div></div>
+              <div class="campaign-row"><div class="campaign-meta"><i class="campaign-swatch" style="background:#d15f78"></i><div><span class="campaign-name">Holiday Edit</span><span class="campaign-client">Mica · 24 creators · €36k</span></div></div><div class="campaign-track"><div class="window production" style="left:48%; width:29%">Creator production · 21 days</div><div class="window publication" style="left:65%; width:31%">Publishing & distribution · 31 days</div></div></div>
+              <div class="campaign-row"><div class="campaign-meta"><i class="campaign-swatch" style="background:#9f74cf"></i><div><span class="campaign-name">Brand Refresh</span><span class="campaign-client">Kanso · 16 creators · €20k</span></div></div><div class="campaign-track"><div class="window production" style="left:74%; width:22%">Creator production · 18 days</div><div class="window publication" style="left:87%; width:13%">Publishing · 14 days</div></div></div>
+              <div class="legend"><span><i style="background:var(--lavender)"></i>Creator production</span><span><i style="background:var(--mint)"></i>Publishing & distribution</span><span><i style="background:var(--rose-ink); border-radius:50%"></i>Today</span></div>
+            </div>
+          </article>
+          <aside class="card insight-list">
+            <div class="insight"><span class="insight-kicker">Next decision</span><strong>Approve Holiday Edit recruiting</strong><p>24 creators need to be secured before 24 October.</p></div>
+            <div class="insight"><span class="pill alert">Capacity conflict</span><strong>Two launches overlap in October</strong><p>Creative Ops is forecast at 108% workload for two weeks.</p></div>
+            <div class="insight"><span class="pill good">Budget room</span><strong>€19k remains uncommitted</strong><p>Available to reinforce Q4 distribution or new business.</p></div>
+          </aside>
+        </div>
+        <p class="proposal-note">Best as the agency home screen: it answers “what is happening, when, and where will the next collision be?” in one scan.</p>
+      </section>
+
+      <section id="capacity" class="view">
+        <div class="section-heading"><h2>Capacity & hiring</h2><p class="section-note">Weekly load against available internal capacity</p></div>
+        <div class="capacity-grid">
+          <div>
+            <article class="card load-card">
+              <div class="load-header"><span class="load-title">Team capacity</span><span class="pill warn">October needs action</span></div>
+              <div class="load-scale"><span></span><span>W39</span><span>W40</span><span>W41</span><span>W42</span><span>W43</span></div>
+              <div class="team-load"><div><span class="team-name">Creative Ops</span><span class="team-detail">2.0 FTE available</span></div><div class="heat mid">82%</div><div class="heat high">96%</div><div class="heat over">108%</div><div class="heat over">104%</div><div class="heat mid">88%</div></div>
+              <div class="team-load"><div><span class="team-name">Creator Success</span><span class="team-detail">2.5 FTE available</span></div><div class="heat low">63%</div><div class="heat mid">77%</div><div class="heat high">92%</div><div class="heat high">91%</div><div class="heat mid">75%</div></div>
+              <div class="team-load"><div><span class="team-name">Campaign Strategy</span><span class="team-detail">1.5 FTE available</span></div><div class="heat low">58%</div><div class="heat mid">71%</div><div class="heat mid">79%</div><div class="heat high">87%</div><div class="heat mid">68%</div></div>
+              <div class="team-load"><div><span class="team-name">Paid Distribution</span><span class="team-detail">1.0 FTE available</span></div><div class="heat low">48%</div><div class="heat low">52%</div><div class="heat mid">73%</div><div class="heat high">89%</div><div class="heat high">93%</div></div>
+            </article>
+            <article class="card campaign-demand">
+              <h2>What drives the October peak</h2>
+              <div class="demand-row"><strong>Launch Wave</strong><span>30 creators onboarding</span><span class="pill warn">+0.6 FTE</span></div>
+              <div class="demand-row"><strong>Holiday Edit</strong><span>24 creators recruiting</span><span class="pill warn">+0.5 FTE</span></div>
+              <div class="demand-row"><strong>New Season</strong><span>18 creators publishing</span><span class="pill good">steady</span></div>
+            </article>
+          </div>
+          <aside class="card hire-card">
+            <p class="eyebrow">Hiring signal</p>
+            <h2>Open a Creative Ops role by 6 October</h2>
+            <p>Without coverage, the two October launch weeks exceed the planned delivery capacity by 0.3 FTE.</p>
+            <div class="hire-role"><strong>Creative Ops Coordinator</strong><span>0.5–1.0 FTE<br />Start by W41</span></div>
+            <div class="hire-role"><strong>Creator Success freelance bench</strong><span>Backup<br />for W41–W42</span></div>
+          </aside>
+        </div>
+        <p class="proposal-note">Best as an operations ritual: use it in the weekly staffing meeting, then turn a sustained overload into a recruiting or freelance decision.</p>
+      </section>
+
+      <section id="finance" class="view">
+        <div class="section-heading"><h2>Budget commitments</h2><p class="section-note">Campaign spend planned across the next four months</p></div>
+        <div class="finance-layout">
+          <article class="card budget-card">
+            <h2>Portfolio budget</h2>
+            <div class="budget-total"><strong>€142,000</strong><span>approved envelope</span></div>
+            <div class="budget-bar" aria-label="Budget allocation"><i style="width:54%; background:#5779e7"></i><i style="width:27%; background:#28a878"></i><i style="width:13%; background:#e39748"></i><i style="width:6%; background:#e2e5ed"></i></div>
+            <div class="budget-key"><div><i style="background:#5779e7"></i>Creator fees</div><strong>€76,700 · 54%</strong></div>
+            <div class="budget-key"><div><i style="background:#28a878"></i>Distribution</div><strong>€38,300 · 27%</strong></div>
+            <div class="budget-key"><div><i style="background:#e39748"></i>Internal delivery</div><strong>€18,000 · 13%</strong></div>
+            <div class="budget-key"><div><i style="background:#e2e5ed"></i>Unallocated</div><strong>€9,000 · 6%</strong></div>
+          </article>
+          <article class="card monthly">
+            <div class="monthly-heading"><h2>Committed by month</h2><span>€k</span></div>
+            <div class="month-bars">
+              <div class="month-column" style="--h:45%"><em>€19k</em><div class="month-stack"><i style="height:26px; background:#28a878"></i><i style="height:57px; background:#5779e7"></i></div></div>
+              <div class="month-column" style="--h:90%"><em>€38k</em><div class="month-stack"><i style="height:44px; background:#28a878"></i><i style="height:19px; background:#e39748"></i><i style="height:91px; background:#5779e7"></i></div></div>
+              <div class="month-column" style="--h:100%"><em>€42k</em><div class="month-stack"><i style="height:48px; background:#28a878"></i><i style="height:25px; background:#e39748"></i><i style="height:104px; background:#5779e7"></i></div></div>
+              <div class="month-column" style="--h:73%"><em>€31k</em><div class="month-stack"><i style="height:38px; background:#28a878"></i><i style="height:17px; background:#e39748"></i><i style="height:74px; background:#5779e7"></i></div></div>
+            </div>
+            <div class="month-labels"><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span></div>
+          </article>
+        </div>
+        <article class="card campaign-table">
+          <table>
+            <thead><tr><th>Campaign</th><th>Dates</th><th>Creators</th><th>Internal team</th><th class="num">Budget</th><th class="num">Distribution</th></tr></thead>
+            <tbody>
+              <tr><td>New Season</td><td>03 Sep – 17 Oct</td><td>18</td><td>0.8 FTE</td><td class="num amount">€28,000</td><td class="num">45 days</td></tr>
+              <tr><td>Launch Wave</td><td>15 Sep – 04 Nov</td><td>30</td><td>1.4 FTE</td><td class="num amount">€42,000</td><td class="num">50 days</td></tr>
+              <tr><td>Always On</td><td>01 Sep – 31 Dec</td><td>12</td><td>0.4 FTE</td><td class="num amount">€16,000</td><td class="num">4 months</td></tr>
+              <tr><td>Holiday Edit</td><td>10 Nov – 11 Dec</td><td>24</td><td>1.1 FTE</td><td class="num amount">€36,000</td><td class="num">31 days</td></tr>
+              <tr><td>Brand Refresh</td><td>20 Nov – 14 Dec</td><td>16</td><td>0.6 FTE</td><td class="num amount">€20,000</td><td class="num">14 days</td></tr>
+            </tbody>
+          </table>
+        </article>
+        <p class="proposal-note">Best for monthly finance and commercial planning: it makes future commitments and the cost of an additional campaign explicit.</p>
+      </section>
+    </main>
+    <script>
+      const buttons = document.querySelectorAll('.idea');
+      const views = document.querySelectorAll('.view');
+      buttons.forEach((button) => button.addEventListener('click', () => {
+        buttons.forEach((item) => item.classList.toggle('active', item === button));
+        views.forEach((view) => view.classList.toggle('active', view.id === button.dataset.view));
+      }));
+    </script>
+  </body>
+</html>
