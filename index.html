@@ -64,7 +64,7 @@
 
       .portfolio-layout { display: grid; grid-template-columns: minmax(720px, 1fr) 270px; gap: 16px; align-items: start; }
       #portfolio .portfolio-layout { display: none; }
-      .annual-planner { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 18px; align-items: start; }
+      .annual-planner { display: block; }
       .month-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px; }
       .month-card { cursor: pointer; min-height: 145px; text-align: left; border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 15px; color: var(--ink); transition: 160ms ease; }
       .month-card:hover { border-color: #cdd5fb; background: #fafbff; }
@@ -78,7 +78,7 @@
       .month-campaigns i { display: none; }
       .campaign-chip { display: inline-flex; padding: 3px 6px; border-radius: 4px; background: #f1f3f8; color: #5e687d; font-size: 10px; font-style: normal; }
       .month-campaigns i.campaign-chip { display: inline-flex; }
-      .month-detail { padding: 20px; min-height: 410px; }
+      .month-detail { display: none; }
       .detail-overline { color: var(--blue); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; }
       .detail-month { margin: 5px 0 18px; font-size: 25px; letter-spacing: -.045em; }
       .detail-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -99,6 +99,31 @@
       .detail-campaign .status-label { display: inline-flex; width: fit-content; }
       .detail-focus { margin: 16px 0 0; padding: 11px; border-radius: 8px; background: #f6f7fa; color: var(--muted); font-size: 12px; line-height: 1.35; }
       #capacity, #finance { display: none !important; }
+      .review-page { display: none; max-width: 1120px; margin: 0 auto; padding: 34px 42px 60px; }
+      .review-page.active { display: block; animation: enter .2s ease; }
+      .review-open .topbar { display: none; }
+      .review-back { border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 0; font-size: 13px; }
+      .review-back:hover { color: var(--ink); }
+      .review-header { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; margin: 24px 0 28px; }
+      .review-title { margin: 0; font-size: clamp(32px, 4vw, 46px); letter-spacing: -.055em; }
+      .review-kicker { margin: 0 0 8px; color: var(--blue); font-size: 11px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+      .review-status { margin-top: 6px; }
+      .review-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 22px; }
+      .review-summary-item { border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 16px; }
+      .review-summary-item span { display: block; color: var(--muted); font-size: 11px; }
+      .review-summary-item strong { display: block; margin-top: 7px; font-size: 20px; letter-spacing: -.04em; }
+      .review-table-card { overflow: hidden; }
+      .review-table-heading { display: flex; justify-content: space-between; align-items: baseline; padding: 18px 20px 14px; }
+      .review-table-heading h2 { font-size: 17px; }
+      .review-table-heading span { color: var(--muted); font-size: 12px; }
+      .review-table { min-width: 760px; }
+      .review-table td, .review-table th { padding: 15px 20px; }
+      .review-table td { vertical-align: middle; }
+      .review-table td:first-child { min-width: 190px; }
+      .empty-review { padding: 34px 20px 38px; color: var(--muted); }
+      .review-controls { display: flex; gap: 8px; }
+      .review-controls button { border: 1px solid var(--line); background: #fff; border-radius: 7px; padding: 7px 10px; color: var(--ink); cursor: pointer; font-size: 12px; }
+      .review-controls button:hover { background: #f7f8fb; }
       .timeline { overflow: hidden; }
       .timeline-header, .campaign-row { display: grid; grid-template-columns: 205px 1fr; }
       .timeline-header { border-bottom: 1px solid var(--line); }
@@ -191,6 +216,7 @@
         .shell { padding: 25px 18px 42px; }
         .idea-switcher, .metric-grid, .portfolio-layout, .annual-planner, .capacity-grid, .finance-layout { grid-template-columns: 1fr; }
         .month-grid { grid-template-columns: repeat(3, 1fr); }
+        .review-page { padding: 25px 18px 42px; }
         .timeline { overflow-x: auto; }
         .timeline-inner { min-width: 750px; }
       }
@@ -201,6 +227,7 @@
         .idea-purpose { display: none; }
         .metric-grid { grid-template-columns: repeat(2, 1fr); }
         .month-grid { grid-template-columns: repeat(2, 1fr); }
+        .review-summary { grid-template-columns: repeat(2, 1fr); }
         .load-scale, .team-load { grid-template-columns: 116px repeat(5, 1fr); }
         .team-name { font-size: 12px; }
       }
@@ -267,6 +294,8 @@
         </div>
         <p class="proposal-note">Actual activity is listed from April to September. The next six months are ready for planning.</p>
       </section>
+
+      <section id="monthReview" class="review-page" aria-live="polite"></section>
 
       <section id="capacity" class="view">
         <div class="section-heading"><h2>Capacity & hiring</h2><p class="section-note">Weekly load against available internal capacity</p></div>
@@ -361,30 +390,58 @@
         { month: 'March', year: '2027', status: 'planned', campaigns: [] },
       ];
       const monthGrid = document.querySelector('#monthGrid');
-      const monthDetail = document.querySelector('#monthDetail');
+      const annualHorizon = document.querySelector('#portfolio');
+      const monthReview = document.querySelector('#monthReview');
       function statusLabel(status) { return status === 'live' ? 'Live today' : status === 'planned' ? 'Planning open' : 'Completed'; }
       function renderMonth(index) {
-        const item = annualPlan[index];
         monthGrid.innerHTML = annualPlan.map((month, monthIndex) => `
-          <button class="month-card ${monthIndex === index ? 'active' : ''} ${month.status === 'planned' ? 'future' : ''}" type="button" data-month-index="${monthIndex}">
+          <button class="month-card ${month.status === 'planned' ? 'future' : ''}" type="button" data-month-index="${monthIndex}">
             <span class="month-name">${month.month}</span><span class="month-period">${month.year}</span>
             <strong class="month-total">${month.campaigns.length ? `${month.campaigns.length} campaigns` : 'Planning open'}</strong><span class="month-caption">${statusLabel(month.status)}</span>
             <span class="month-campaigns">${month.campaigns.map((campaign) => `<i class="campaign-chip">${campaign.name}</i>`).join('')}</span>
           </button>`).join('');
-        monthDetail.innerHTML = `
-          <span class="detail-overline">${statusLabel(item.status)}</span>
-          <h3 class="detail-month">${item.month} ${item.year}</h3>
-          <div class="detail-metrics">
-            <div class="detail-metric"><span>Client budget</span><strong>—</strong></div>
-            <div class="detail-metric"><span>Creator budget</span><strong>—</strong></div>
-            <div class="detail-metric"><span>Bonus budget</span><strong>—</strong></div>
-            <div class="detail-metric"><span>Total views</span><strong>—</strong></div>
-          </div>
-          <div class="detail-campaign-list"><p class="detail-campaign-title">Campaigns</p>${item.campaigns.length ? item.campaigns.map((campaign) => `<div class="detail-campaign"><strong><i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${campaign.color};margin-right:6px"></i>${campaign.name}</strong><span class="status-label ${campaign.status}">${statusLabel(campaign.status)}</span></div>`).join('') : '<p class="detail-focus">No campaign has been added for this month yet.</p>'}</div>
-          <p class="detail-focus">Financial and view reporting will be added from the real campaign data.</p>`;
-        monthGrid.querySelectorAll('[data-month-index]').forEach((card) => card.addEventListener('click', () => renderMonth(Number(card.dataset.monthIndex))));
+        monthGrid.querySelectorAll('[data-month-index]').forEach((card) => card.addEventListener('click', () => openMonthReview(Number(card.dataset.monthIndex))));
       }
-      renderMonth(5);
+      function openMonthReview(index) {
+        const item = annualPlan[index];
+        annualHorizon.classList.remove('active');
+        monthReview.classList.add('active');
+        document.body.classList.add('review-open');
+        monthReview.innerHTML = `
+          <button class="review-back" type="button">← Back to annual horizon</button>
+          <header class="review-header">
+            <div><p class="review-kicker">Monthly review · ${statusLabel(item.status)}</p><h1 class="review-title">${item.month} ${item.year}</h1></div>
+            <div class="review-controls"><button type="button" data-prev ${index === 0 ? 'disabled' : ''}>Previous month</button><button type="button" data-next ${index === annualPlan.length - 1 ? 'disabled' : ''}>Next month</button></div>
+          </header>
+          <section class="review-summary" aria-label="Monthly summary">
+            <div class="review-summary-item"><span>Campaigns</span><strong>${item.campaigns.length}</strong></div>
+            <div class="review-summary-item"><span>Client budget</span><strong>—</strong></div>
+            <div class="review-summary-item"><span>Creator + bonus</span><strong>—</strong></div>
+            <div class="review-summary-item"><span>Total views</span><strong>—</strong></div>
+          </section>
+          <section class="card review-table-card">
+            <div class="review-table-heading"><h2>Campaign activity</h2><span>${item.campaigns.length ? `${item.campaigns.length} campaigns` : 'Planning month'}</span></div>
+            ${item.campaigns.length ? `<div style="overflow-x:auto"><table class="review-table"><thead><tr><th>Campaign</th><th>Status today</th><th class="num">Client budget</th><th class="num">Creator budget</th><th class="num">Bonus</th><th class="num">Views</th></tr></thead><tbody>${item.campaigns.map((campaign) => `<tr><td><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${campaign.color};margin-right:8px"></i>${campaign.name}</td><td><span class="status-label ${campaign.status}">${statusLabel(campaign.status)}</span></td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>`).join('')}</tbody></table></div>` : '<p class="empty-review">No campaign has been planned for this month yet.</p>'}
+          </section>`;
+        window.location.hash = `month-${index}`;
+        monthReview.querySelector('.review-back').addEventListener('click', closeMonthReview);
+        const previous = monthReview.querySelector('[data-prev]');
+        const next = monthReview.querySelector('[data-next]');
+        if (previous) previous.addEventListener('click', () => openMonthReview(index - 1));
+        if (next) next.addEventListener('click', () => openMonthReview(index + 1));
+        window.scrollTo(0, 0);
+      }
+      function closeMonthReview() {
+        monthReview.classList.remove('active');
+        annualHorizon.classList.add('active');
+        document.body.classList.remove('review-open');
+        history.replaceState(null, '', window.location.pathname);
+      }
+      renderMonth();
+      const requestedMonth = Number(window.location.hash.replace('#month-', ''));
+      if (Number.isInteger(requestedMonth) && requestedMonth >= 0 && requestedMonth < annualPlan.length) {
+        openMonthReview(requestedMonth);
+      }
     </script>
   </body>
 </html>
